@@ -1,0 +1,26 @@
+# Performance Playbook
+
+## Benchmarks
+
+- `go test -bench . ./responses` runs the accumulator benchmark.
+- Track improvements when optimizing streaming aggregation.
+
+## gRPC Keepalive
+
+- Set `grpc.WithKeepaliveParams` via `grok.WithDialOptions` to keep long-lived streams healthy.
+
+```go
+kac := keepalive.ClientParameters{Time: 30 * time.Second, Timeout: 10 * time.Second}
+client, _ := grok.NewClient(ctx, grok.WithDialOptions(grpc.WithKeepaliveParams(kac)))
+```
+
+## Reuse Accumulators
+
+- For high-volume streaming, reuse an `Accumulator` across related requests to reduce allocations.
+- Call `acc.Reset()` (TODO: add helper) or instantiate from a sync.Pool.
+
+## Streaming Best Practices
+
+- Use the iterator with context cancellation to cleanly abort streams.
+- Decrypt chunks inline to avoid extra passes over the data.
+- Avoid copying entire chunks unless necessary; process deltas in-place.
