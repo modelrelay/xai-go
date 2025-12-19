@@ -22,36 +22,102 @@ func NewAccumulator() *Accumulator {
 	}
 }
 
+// Reset clears the accumulator so it can be reused for another stream.
+func (a *Accumulator) Reset() {
+	a.base = &xaiapiv1.GetChatCompletionResponse{}
+	for key := range a.outputs {
+		delete(a.outputs, key)
+	}
+}
+
 // AddChunk merges a streaming chunk into the aggregated response.
 func (a *Accumulator) AddChunk(chunk *xaiapiv1.GetChatCompletionChunk) {
-	if chunk == nil {
+	mergeChunk(a.base, a.outputs, chunk)
+}
+
+// Response returns the aggregated completion response up to this point.
+func (a *Accumulator) Response() *xaiapiv1.GetChatCompletionResponse {
+	resp := proto.Clone(a.base).(*xaiapiv1.GetChatCompletionResponse)
+	if len(a.outputs) == 0 {
+		return resp
+	}
+
+	indexes := make([]int, 0, len(a.outputs))
+	for idx := range a.outputs {
+		indexes = append(indexes, int(idx))
+	}
+	sort.Ints(indexes)
+
+	resp.Outputs = make([]*xaiapiv1.CompletionOutput, 0, len(indexes))
+	for _, idx := range indexes {
+		out := a.outputs[int32(idx)]
+		resp.Outputs = append(resp.Outputs, proto.Clone(out).(*xaiapiv1.CompletionOutput))
+	}
+	return resp
+}
+
+// ReduceChunk returns a new response state by applying a chunk to the prior state.
+// The input state is never mutated.
+func ReduceChunk(state *xaiapiv1.GetChatCompletionResponse, chunk *xaiapiv1.GetChatCompletionChunk) *xaiapiv1.GetChatCompletionResponse {
+	if state == nil && chunk == nil {
+		return &xaiapiv1.GetChatCompletionResponse{}
+	}
+	var next *xaiapiv1.GetChatCompletionResponse
+	if state == nil {
+		next = &xaiapiv1.GetChatCompletionResponse{}
+	} else {
+		next = proto.Clone(state).(*xaiapiv1.GetChatCompletionResponse)
+	}
+	outputs := map[int32]*xaiapiv1.CompletionOutput{}
+	for _, out := range next.Outputs {
+		if out == nil {
+			continue
+		}
+		outputs[out.Index] = out
+	}
+	mergeChunk(next, outputs, chunk)
+
+	indexes := make([]int, 0, len(outputs))
+	for idx := range outputs {
+		indexes = append(indexes, int(idx))
+	}
+	sort.Ints(indexes)
+	next.Outputs = make([]*xaiapiv1.CompletionOutput, 0, len(indexes))
+	for _, idx := range indexes {
+		next.Outputs = append(next.Outputs, outputs[int32(idx)])
+	}
+	return next
+}
+
+func mergeChunk(base *xaiapiv1.GetChatCompletionResponse, outputs map[int32]*xaiapiv1.CompletionOutput, chunk *xaiapiv1.GetChatCompletionChunk) {
+	if chunk == nil || base == nil {
 		return
 	}
 	if id := chunk.GetId(); id != "" {
-		a.base.Id = id
+		base.Id = id
 	}
 	if created := chunk.GetCreated(); created != nil {
-		a.base.Created = created
+		base.Created = created
 	}
 	if model := chunk.GetModel(); model != "" {
-		a.base.Model = model
+		base.Model = model
 	}
 	if fingerprint := chunk.GetSystemFingerprint(); fingerprint != "" {
-		a.base.SystemFingerprint = fingerprint
+		base.SystemFingerprint = fingerprint
 	}
 	if usage := chunk.GetUsage(); usage != nil {
-		a.base.Usage = usage
+		base.Usage = usage
 	}
 	if len(chunk.GetCitations()) > 0 {
-		a.base.Citations = append([]string(nil), chunk.GetCitations()...)
+		base.Citations = append([]string(nil), chunk.GetCitations()...)
 	}
 	if debug := chunk.GetDebugOutput(); debug != nil {
-		a.base.DebugOutput = debug
+		base.DebugOutput = debug
 	}
 
 	for _, outChunk := range chunk.GetOutputs() {
 		index := outChunk.GetIndex()
-		output := a.ensureOutput(index)
+		output := ensureOutput(outputs, index)
 
 		if delta := outChunk.GetDelta(); delta != nil {
 			msg := output.GetMessage()
@@ -87,35 +153,18 @@ func (a *Accumulator) AddChunk(chunk *xaiapiv1.GetChatCompletionChunk) {
 	}
 }
 
-// Response returns the aggregated completion response up to this point.
-func (a *Accumulator) Response() *xaiapiv1.GetChatCompletionResponse {
-	resp := proto.Clone(a.base).(*xaiapiv1.GetChatCompletionResponse)
-	if len(a.outputs) == 0 {
-		return resp
-	}
-
-	indexes := make([]int, 0, len(a.outputs))
-	for idx := range a.outputs {
-		indexes = append(indexes, int(idx))
-	}
-	sort.Ints(indexes)
-
-	resp.Outputs = make([]*xaiapiv1.CompletionOutput, 0, len(indexes))
-	for _, idx := range indexes {
-		out := a.outputs[int32(idx)]
-		resp.Outputs = append(resp.Outputs, proto.Clone(out).(*xaiapiv1.CompletionOutput))
-	}
-	return resp
+func (a *Accumulator) ensureOutput(index int32) *xaiapiv1.CompletionOutput {
+	return ensureOutput(a.outputs, index)
 }
 
-func (a *Accumulator) ensureOutput(index int32) *xaiapiv1.CompletionOutput {
-	if output, ok := a.outputs[index]; ok {
+func ensureOutput(outputs map[int32]*xaiapiv1.CompletionOutput, index int32) *xaiapiv1.CompletionOutput {
+	if output, ok := outputs[index]; ok {
 		return output
 	}
 	output := &xaiapiv1.CompletionOutput{
 		Index:   index,
 		Message: &xaiapiv1.CompletionMessage{},
 	}
-	a.outputs[index] = output
+	outputs[index] = output
 	return output
 }

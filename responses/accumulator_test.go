@@ -71,6 +71,59 @@ func TestAccumulatorMergesChunks(t *testing.T) {
 	}
 }
 
+func TestAccumulatorReset(t *testing.T) {
+	acc := NewAccumulator()
+	acc.AddChunk(&xaiapiv1.GetChatCompletionChunk{
+		Id: "resp_reset",
+		Outputs: []*xaiapiv1.CompletionOutputChunk{
+			{Index: 0, Delta: &xaiapiv1.Delta{Content: "hello"}},
+		},
+	})
+	acc.Reset()
+	resp := acc.Response()
+	if resp.GetId() != "" {
+		t.Fatalf("expected empty id after reset, got %q", resp.GetId())
+	}
+	if len(resp.GetOutputs()) != 0 {
+		t.Fatalf("expected no outputs after reset")
+	}
+}
+
+func TestReduceChunkIsPure(t *testing.T) {
+	chunk1 := &xaiapiv1.GetChatCompletionChunk{
+		Id:    "resp_123",
+		Model: "grok-2",
+		Outputs: []*xaiapiv1.CompletionOutputChunk{
+			{
+				Index: 0,
+				Delta: &xaiapiv1.Delta{
+					Content: "Hello",
+				},
+			},
+		},
+	}
+	chunk2 := &xaiapiv1.GetChatCompletionChunk{
+		Id:    "resp_123",
+		Model: "grok-2",
+		Outputs: []*xaiapiv1.CompletionOutputChunk{
+			{
+				Index: 0,
+				Delta: &xaiapiv1.Delta{Content: " world"},
+			},
+		},
+	}
+
+	state1 := ReduceChunk(nil, chunk1)
+	state2 := ReduceChunk(state1, chunk2)
+
+	if got := state1.GetOutputs()[0].GetMessage().GetContent(); got != "Hello" {
+		t.Fatalf("state1 mutated: got %q", got)
+	}
+	if got := state2.GetOutputs()[0].GetMessage().GetContent(); got != "Hello world" {
+		t.Fatalf("state2 mismatch: got %q", got)
+	}
+}
+
 func BenchmarkAccumulatorAddChunk(b *testing.B) {
 	chunk := &xaiapiv1.GetChatCompletionChunk{
 		Id: "resp",

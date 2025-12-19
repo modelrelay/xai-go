@@ -17,7 +17,7 @@ client, _ := grok.NewClient(ctx, grok.WithDialOptions(grpc.WithKeepaliveParams(k
 ## Reuse Accumulators
 
 - For high-volume streaming, reuse an `Accumulator` across related requests to reduce allocations.
-- Call `acc.Reset()` (TODO: add helper) or instantiate from a sync.Pool.
+- Call `acc.Reset()` or instantiate from a sync.Pool.
 
 ## Streaming Best Practices
 

@@ -11,7 +11,34 @@
 
 - Tests expect outbound network access and will skip automatically if `GROK_API_KEY` is unset.
 
-## Future Replay Harness (TODO)
+## Replay Harness
 
-- Record gRPC responses in staging and replay locally for deterministic CI.
-- Track open work in Stage 7.
+Use the replay harness to record real gRPC traffic once and replay it locally without hitting the API.
+
+```go
+recorder, err := replay.Open("replay.ndjson", replay.ModeRecord)
+if err != nil {
+    // handle
+}
+defer recorder.Close()
+
+client, err := grok.NewClient(ctx,
+    grok.WithAPIKey(os.Getenv("GROK_API_KEY")),
+    grok.WithDialOptions(recorder.DialOptions()...),
+)
+```
+
+To replay, load the same file in `ModeReplay`:
+
+```go
+replayer, err := replay.Open("replay.ndjson", replay.ModeReplay)
+if err != nil {
+    // handle
+}
+defer replayer.Close()
+
+client, err := grok.NewClient(ctx,
+    grok.WithAPIKey("replay"),
+    grok.WithDialOptions(replayer.DialOptions()...),
+)
+```

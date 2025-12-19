@@ -1,4 +1,4 @@
-# Grok Go SDK TODOs
+# Grok Go SDK Roadmap
 
 ## Stage 1 – Bootstrap & Transport
 - [x] Pin `xai-proto` as a Git submodule or Go workspace reference and add Buf config to this repo.
@@ -14,7 +14,7 @@
 - [x] Implement `CreateStream`/`RetrieveStream`, including event decoding for content, reasoning, tool calls, encrypted payloads, and usage deltas.
 - [x] Build a streaming accumulator that reconstructs `GetChatCompletionResponse` and exposes channel/callback helpers.
 - [x] Add tool-call event helpers (incremental JSON args, completion detection, error surfacing).
-- [ ] Expose the streaming accumulator as a pure reducer (`func(state, chunk) state`) so functional consumers can compose their own pipelines.
+- [x] Expose the streaming accumulator as a pure reducer (`func(state, chunk) state`) so functional consumers can compose their own pipelines.
 - [x] Write unit tests covering accumulator behavior and chunk merging correctness.
 
 ## Stage 3 – Core Service Parity
