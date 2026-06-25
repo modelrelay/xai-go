@@ -10,10 +10,11 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/modelrelay/xai-go/auth"
-	"github.com/modelrelay/xai-go/billing"
+	"github.com/modelrelay/xai-go/batch"
 	"github.com/modelrelay/xai-go/chat"
 	"github.com/modelrelay/xai-go/documents"
 	"github.com/modelrelay/xai-go/embeddings"
+	"github.com/modelrelay/xai-go/files"
 	"github.com/modelrelay/xai-go/images"
 	"github.com/modelrelay/xai-go/internal/raw"
 	"github.com/modelrelay/xai-go/internal/transport"
@@ -21,6 +22,7 @@ import (
 	"github.com/modelrelay/xai-go/responses"
 	"github.com/modelrelay/xai-go/sample"
 	"github.com/modelrelay/xai-go/tokenize"
+	"github.com/modelrelay/xai-go/video"
 )
 
 const (
@@ -44,7 +46,9 @@ type Client struct {
 	Tokenize   tokenize.Service
 	Models     models.Service
 	Auth       auth.Service
-	Billing    billing.Service
+	Batch      batch.Service
+	Files      files.Service
+	Video      video.Service
 }
 
 // Option configures a client instance.
@@ -100,7 +104,9 @@ func NewClient(ctx context.Context, opts ...Option) (*Client, error) {
 		Tokenize:   tokenize.NewService(rawClients.Token),
 		Models:     models.NewService(rawClients.Models),
 		Auth:       auth.NewService(rawClients.Auth),
-		Billing:    billing.NewService(rawClients.Billing),
+		Batch:      batch.NewService(rawClients.Batch),
+		Files:      files.NewService(rawClients.Files),
+		Video:      video.NewService(rawClients.Video),
 	}
 
 	return client, nil

@@ -48,3 +48,8 @@ func (s Service) GetStoredCompletion(ctx context.Context, req *xaiapiv1.GetStore
 func (s Service) DeleteStoredCompletion(ctx context.Context, req *xaiapiv1.DeleteStoredCompletionRequest, opts ...grpc.CallOption) (*xaiapiv1.DeleteStoredCompletionResponse, error) {
 	return s.raw.DeleteStoredCompletion(ctx, req, opts...)
 }
+
+// CompactContext compacts a conversation's context.
+func (s Service) CompactContext(ctx context.Context, req *xaiapiv1.CompactContextRequest, opts ...grpc.CallOption) (*xaiapiv1.CompactContextResponse, error) {
+	return s.raw.CompactContext(ctx, req, opts...)
+}

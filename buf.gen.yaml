@@ -3,6 +3,12 @@ managed:
   enabled: true
   go_package_prefix:
     default: github.com/modelrelay/xai-go/gen
+    # Don't rewrite well-known/googleapis deps onto our local prefix; they
+    # resolve to their canonical upstream Go packages (e.g. google/rpc ->
+    # google.golang.org/genproto/googleapis/rpc).
+    except:
+      - buf.build/googleapis/googleapis
+      - buf.build/grpc-ecosystem/grpc-gateway
 plugins:
   - plugin: buf.build/protocolbuffers/go
     out: gen

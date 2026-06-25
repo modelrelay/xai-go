@@ -150,10 +150,11 @@ func CollectionsSearchTool(collections []string, limit *int32) *xaiapiv1.Tool {
 	return &xaiapiv1.Tool{Tool: &xaiapiv1.Tool_CollectionsSearch{CollectionsSearch: cfg}}
 }
 
-// DocumentSearchTool configures document search.
-func DocumentSearchTool(limit *int32) *xaiapiv1.Tool {
-	cfg := &xaiapiv1.DocumentSearch{Limit: limit}
-	return &xaiapiv1.Tool{Tool: &xaiapiv1.Tool_DocumentSearch{DocumentSearch: cfg}}
+// AttachmentSearchTool configures attachment (file) search. Formerly
+// "document search" — xAI renamed it to AttachmentSearch in the proto.
+func AttachmentSearchTool(limit *int32) *xaiapiv1.Tool {
+	cfg := &xaiapiv1.AttachmentSearch{Limit: limit}
+	return &xaiapiv1.Tool{Tool: &xaiapiv1.Tool_AttachmentSearch{AttachmentSearch: cfg}}
 }
 
 // MCPOption mutates an MCP tool configuration.

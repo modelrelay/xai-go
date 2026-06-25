@@ -52,6 +52,11 @@ func (c *ChatClient) DeleteStoredCompletion(ctx context.Context, req *xaiapiv1.D
 	return c.stub.DeleteStoredCompletion(ctx, req, opts...)
 }
 
+// CompactContext compacts a conversation's context.
+func (c *ChatClient) CompactContext(ctx context.Context, req *xaiapiv1.CompactContextRequest, opts ...grpc.CallOption) (*xaiapiv1.CompactContextResponse, error) {
+	return c.stub.CompactContext(ctx, req, opts...)
+}
+
 func (c *ChatClient) applyDefaults(req *xaiapiv1.GetCompletionsRequest) {
 	if req == nil {
 		return

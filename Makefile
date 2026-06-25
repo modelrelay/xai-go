@@ -1,10 +1,13 @@
 BUF ?= go run github.com/bufbuild/buf/cmd/buf@v1.33.0
 PROTO_SRC ?= third_party/xai-proto
+# Public scope only: generate the xAI inference API (xai/api), not xAI's
+# internal management_api / shared (billing, analytics) surfaces.
+PROTO_PATH ?= $(PROTO_SRC)/proto/xai/api
 
 .PHONY: proto tidy ci
 
 proto:
-	$(BUF) generate --template buf.gen.yaml $(PROTO_SRC)
+	$(BUF) generate --template buf.gen.yaml --path $(PROTO_PATH) $(PROTO_SRC)
 
 tidy:
 	go fmt ./...

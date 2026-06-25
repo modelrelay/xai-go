@@ -1,11 +1,24 @@
-## xAI Go SDK
+# xai-go
 
-Early-stage Go SDK for xAI's Grok models via gRPC API. Stage 1 focuses on repo scaffolding, proto generation, transport plumbing, and exposing low-level Chat/Sample services.
+A **gRPC-native Go client for xAI's Grok API**, generated directly from xAI's
+official protobuf definitions. It speaks Grok's native gRPC surface with
+first-class, strongly-typed Go types and streaming — chat, responses,
+embeddings, images, documents, tokenize, models, and auth.
+
+> **Unofficial.** A community client, **not affiliated with, authorized, or
+> endorsed by xAI**. "xAI" and "Grok" are trademarks of their respective owner.
+> Generated from xAI's public protobuf definitions
+> ([`xai-org/xai-proto`](https://github.com/xai-org/xai-proto)) and maintained on
+> a best-effort basis by [ModelRelay](https://github.com/modelrelay).
+> Licensed under [Apache-2.0](./LICENSE).
 
 ### Generated Protos
 
 - `third_party/xai-proto` is tracked as a git submodule.
 - Run `make proto` (optionally overriding `BUF`) to regenerate `gen/xai/api/v1`.
+- Generation is scoped to `xai/api` (the public inference API). xAI's
+  `management_api` and `shared` (billing, analytics) surfaces are intentionally
+  excluded — see `PROTO_PATH` in the `Makefile`.
 - Buf managed mode ensures go package paths live under `github.com/modelrelay/xai-go/gen/xai/api/v1`.
 
 ### Usage
@@ -92,7 +105,9 @@ fmt.Println(resp.GetOutputs()[0].GetMessage().GetContent())
 - `client.Tokenize.TokenizeText` – tokenize using Grok models.
 - `client.Models.*` – list or inspect available models.
 - `client.Auth.GetAPIKeyInfo` – inspect current API key metadata.
-- `client.Billing.*` – manage billing info, payment methods, invoices, balances, and spend limits.
+- `client.Batch.*` – create and manage batch jobs and their results.
+- `client.Files.*` – upload, list, retrieve, and delete files (with streaming upload/content).
+- `client.Video.*` – generate and extend videos, and poll deferred results.
 
 Chat requests now include `MaxTurns` to bound agentic tool-calling loops server-side; set `req.MaxTurns` on `GetCompletionsRequest` when you need a hard stop.
 
