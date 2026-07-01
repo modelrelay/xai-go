@@ -86,6 +86,31 @@ if err := stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) 
 }
 ```
 
+### Why gRPC for streaming
+
+Most Grok clients consume the OpenAI-compatible HTTP endpoint, where a stream is
+a sequence of Server-Sent Events — `data: {json}\n\n` frames you split,
+JSON-decode, and terminate on a `[DONE]` sentinel. This client speaks Grok's
+native gRPC surface instead, which changes what streaming feels like from Go:
+
+- **Typed chunks, no frame parsing.** Every `stream.Recv()` returns a
+  fully-typed `*GetChatCompletionChunk` — length-prefixed protobuf framing and
+  decoding are handled for you. No SSE delimiter splitting, partial-JSON
+  reassembly, or `[DONE]` sentinel to special-case.
+- **Structured end-of-stream.** A stream ends with a gRPC status: success is a
+  clean `io.EOF`, and a mid-stream failure arrives as a typed `status.Code` (via
+  HTTP/2 trailers) — not a truncated body or an in-band error event you have to
+  sniff for.
+- **Real cancellation.** Cancel the `context` and the underlying HTTP/2 stream is
+  reset, signaling the server to stop generating; deadlines propagate the same way.
+- **One connection, many streams.** HTTP/2 multiplexes concurrent requests over a
+  single connection, without per-call connection setup.
+
+For plain one-directional token streaming, SSE works fine and is simpler in the
+browser — a chat completion doesn't exercise gRPC's bidirectional streaming. The
+win here is consuming the stream as typed, framed, status-terminated messages
+from Go, with fewer parsing edge cases.
+
 ### Deferred Responses
 
 ```go
