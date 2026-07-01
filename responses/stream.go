@@ -52,7 +52,9 @@ func (s *Stream) Accumulate(acc *Accumulator) (*xaiapiv1.GetChatCompletionRespon
 	}
 }
 
-// Iterator returns a high-level iterator for streaming chunks.
+// Iterator returns a high-level iterator for streaming chunks. ctx is checked
+// before each receive; to interrupt a receive that is already blocked, cancel
+// the context passed to CreateStream, which the underlying gRPC stream is bound to.
 func (s *Stream) Iterator(ctx context.Context) *Iterator {
 	if ctx == nil {
 		ctx = context.Background()
@@ -60,7 +62,13 @@ func (s *Stream) Iterator(ctx context.Context) *Iterator {
 	return &Iterator{stream: s, ctx: ctx}
 }
 
-// ForEachChunk drains the stream and invokes fn for each chunk.
+// ForEachChunk drains the stream and invokes fn for each chunk. If fn returns an
+// error, iteration stops and the client side of the stream is closed before the
+// error is returned, so the RPC is not left open.
+//
+// ctx guards the loop between receives; to interrupt a receive that is already
+// blocked, cancel the context passed to CreateStream (the gRPC stream is bound
+// to it).
 func (s *Stream) ForEachChunk(ctx context.Context, fn func(*xaiapiv1.GetChatCompletionChunk) error) error {
 	it := s.Iterator(ctx)
 	for {
@@ -75,6 +83,7 @@ func (s *Stream) ForEachChunk(ctx context.Context, fn func(*xaiapiv1.GetChatComp
 			return nil
 		}
 		if err := fn(chunk); err != nil {
+			_ = s.CloseSend()
 			return err
 		}
 	}

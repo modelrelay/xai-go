@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	grok "github.com/modelrelay/xai-go"
+	"github.com/modelrelay/xai-go"
 	"github.com/modelrelay/xai-go/documents"
 	xaiapiv1 "github.com/modelrelay/xai-go/gen/xai/api/v1"
 	"github.com/modelrelay/xai-go/messages"
@@ -19,11 +19,11 @@ import (
 
 func main() {
 	ctx := context.Background()
-	apiKey := os.Getenv("GROK_API_KEY")
+	apiKey := os.Getenv("XAI_API_KEY")
 	if apiKey == "" {
-		log.Fatal("set GROK_API_KEY")
+		log.Fatal("set XAI_API_KEY")
 	}
-	client, err := grok.NewClient(ctx, grok.WithAPIKey(apiKey))
+	client, err := xai.NewClient(ctx, xai.WithAPIKey(apiKey))
 	if err != nil {
 		log.Fatalf("client: %v", err)
 	}
@@ -38,7 +38,7 @@ func main() {
 		log.Fatalf("function tool: %v", err)
 	}
 	req := &xaiapiv1.GetCompletionsRequest{
-		Model: "grok-2-latest",
+		Model: "grok-4.3",
 		Messages: []*xaiapiv1.Message{
 			messages.SystemText("Answer with document search tool when needed."),
 			messages.UserText("Summarize the onboarding guide for engineers."),

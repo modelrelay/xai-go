@@ -15,7 +15,7 @@ const (
 	// DefaultAddress is the public Grok/xAI gRPC endpoint.
 	DefaultAddress = "api.x.ai:443"
 
-	defaultUserAgent = "grok-go-sdk/0.1.0-dev"
+	defaultUserAgent = "xai-go/0.1.1"
 )
 
 // Config holds dial parameters shared across all services.

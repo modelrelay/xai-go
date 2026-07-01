@@ -18,7 +18,7 @@ This short walkthrough shows how to let Grok call a custom `lookup_docs` tool, r
 
    ```go
    stream, _ := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
-       Model: "grok-2-latest",
+       Model: "grok-4.3",
        Messages: []*xaiapiv1.Message{
            messages.SystemText("Use lookup_docs when you need internal knowledge."),
            messages.UserText("Summarize the engineering onboarding guide."),

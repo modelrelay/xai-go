@@ -6,10 +6,10 @@
 - Run them locally via (disables caching so calls always hit the API):
 
   ```bash
-  GROK_API_KEY=sk-... go test -count=1 -tags=integration ./integration/...
+  XAI_API_KEY=sk-... go test -count=1 -tags=integration ./integration/...
   ```
 
-- Tests expect outbound network access and will skip automatically if `GROK_API_KEY` is unset.
+- Tests expect outbound network access and will skip automatically if `XAI_API_KEY` is unset.
 
 ## Replay Harness
 
@@ -22,9 +22,9 @@ if err != nil {
 }
 defer recorder.Close()
 
-client, err := grok.NewClient(ctx,
-    grok.WithAPIKey(os.Getenv("GROK_API_KEY")),
-    grok.WithDialOptions(recorder.DialOptions()...),
+client, err := xai.NewClient(ctx,
+    xai.WithAPIKey(os.Getenv("XAI_API_KEY")),
+    xai.WithDialOptions(recorder.DialOptions()...),
 )
 ```
 
@@ -37,8 +37,8 @@ if err != nil {
 }
 defer replayer.Close()
 
-client, err := grok.NewClient(ctx,
-    grok.WithAPIKey("replay"),
-    grok.WithDialOptions(replayer.DialOptions()...),
+client, err := xai.NewClient(ctx,
+    xai.WithAPIKey("replay"),
+    xai.WithDialOptions(replayer.DialOptions()...),
 )
 ```

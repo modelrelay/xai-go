@@ -53,8 +53,10 @@ func (r *Registry) Handle(ctx context.Context, event responses.ToolCallEvent) (*
 	if err != nil {
 		return nil, err
 	}
+	callID := event.CallID
 	msg := messages.SystemText("") // placeholder to reuse builders
 	msg.Role = xaiapiv1.MessageRole_ROLE_TOOL
+	msg.ToolCallId = &callID
 	msg.Content = []*xaiapiv1.Content{
 		{Content: &xaiapiv1.Content_Text{Text: raw}},
 	}

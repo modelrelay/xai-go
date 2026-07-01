@@ -7,11 +7,11 @@
 
 ## gRPC Keepalive
 
-- Set `grpc.WithKeepaliveParams` via `grok.WithDialOptions` to keep long-lived streams healthy.
+- Set `grpc.WithKeepaliveParams` via `xai.WithDialOptions` to keep long-lived streams healthy.
 
 ```go
 kac := keepalive.ClientParameters{Time: 30 * time.Second, Timeout: 10 * time.Second}
-client, _ := grok.NewClient(ctx, grok.WithDialOptions(grpc.WithKeepaliveParams(kac)))
+client, _ := xai.NewClient(ctx, xai.WithDialOptions(grpc.WithKeepaliveParams(kac)))
 ```
 
 ## Reuse Accumulators

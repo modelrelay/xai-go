@@ -13,7 +13,7 @@ func TestAccumulatorMergesChunks(t *testing.T) {
 
 	chunk1 := &xaiapiv1.GetChatCompletionChunk{
 		Id:      "resp_123",
-		Model:   "grok-2",
+		Model:   "grok-4.3",
 		Created: timestamppb.New(time.Unix(42, 0)),
 		Outputs: []*xaiapiv1.CompletionOutputChunk{
 			{
@@ -33,7 +33,7 @@ func TestAccumulatorMergesChunks(t *testing.T) {
 
 	chunk2 := &xaiapiv1.GetChatCompletionChunk{
 		Id:    "resp_123",
-		Model: "grok-2",
+		Model: "grok-4.3",
 		Outputs: []*xaiapiv1.CompletionOutputChunk{
 			{
 				Index:        0,
@@ -92,7 +92,7 @@ func TestAccumulatorReset(t *testing.T) {
 func TestReduceChunkIsPure(t *testing.T) {
 	chunk1 := &xaiapiv1.GetChatCompletionChunk{
 		Id:    "resp_123",
-		Model: "grok-2",
+		Model: "grok-4.3",
 		Outputs: []*xaiapiv1.CompletionOutputChunk{
 			{
 				Index: 0,
@@ -104,7 +104,7 @@ func TestReduceChunkIsPure(t *testing.T) {
 	}
 	chunk2 := &xaiapiv1.GetChatCompletionChunk{
 		Id:    "resp_123",
-		Model: "grok-2",
+		Model: "grok-4.3",
 		Outputs: []*xaiapiv1.CompletionOutputChunk{
 			{
 				Index: 0,

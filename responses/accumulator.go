@@ -111,6 +111,12 @@ func mergeChunk(base *xaiapiv1.GetChatCompletionResponse, outputs map[int32]*xai
 	if len(chunk.GetCitations()) > 0 {
 		base.Citations = append([]string(nil), chunk.GetCitations()...)
 	}
+	if tier := chunk.GetServiceTier(); tier != xaiapiv1.ServiceTier_SERVICE_TIER_UNSPECIFIED {
+		base.ServiceTier = tier
+	}
+	if files := chunk.GetOutputFiles(); len(files) > 0 {
+		base.OutputFiles = append([]*xaiapiv1.OutputFile(nil), files...)
+	}
 	if debug := chunk.GetDebugOutput(); debug != nil {
 		base.DebugOutput = debug
 	}
@@ -135,6 +141,9 @@ func mergeChunk(base *xaiapiv1.GetChatCompletionResponse, outputs map[int32]*xai
 			}
 			if len(delta.GetToolCalls()) > 0 {
 				msg.ToolCalls = append(msg.ToolCalls, delta.GetToolCalls()...)
+			}
+			if cites := delta.GetCitations(); len(cites) > 0 {
+				msg.Citations = append(msg.Citations, cites...)
 			}
 		}
 

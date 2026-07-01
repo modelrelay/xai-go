@@ -1,4 +1,4 @@
-package grok
+package xai
 
 import (
 	"context"
@@ -27,10 +27,10 @@ import (
 
 const (
 	// Version identifies the current SDK revision reported via User-Agent.
-	Version = "0.1.0-dev"
+	Version = "0.1.1"
 
-	envAPIKey  = "GROK_API_KEY"
-	envAddress = "GROK_GRPC_ADDRESS"
+	envAPIKey  = "XAI_API_KEY"
+	envAddress = "XAI_GRPC_ADDRESS"
 )
 
 // Client holds service entry points for interacting with the Grok API.
@@ -75,7 +75,7 @@ func NewClient(ctx context.Context, opts ...Option) (*Client, error) {
 	}
 
 	if cfg.APIKey == "" {
-		return nil, fmt.Errorf("missing API key (set GROK_API_KEY or use WithAPIKey)")
+		return nil, fmt.Errorf("missing API key (set XAI_API_KEY or use WithAPIKey)")
 	}
 
 	conn, err := transport.Dial(ctx, transport.Config{
@@ -171,7 +171,7 @@ func WithDialOptions(opts ...grpc.DialOption) Option {
 func defaultConfig() config {
 	cfg := config{
 		Address:   transport.DefaultAddress,
-		UserAgent: fmt.Sprintf("grok-go-sdk/%s", Version),
+		UserAgent: fmt.Sprintf("xai-go/%s", Version),
 		Logger:    slog.Default(),
 	}
 

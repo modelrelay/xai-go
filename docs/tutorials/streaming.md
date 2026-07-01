@@ -6,7 +6,7 @@ This tutorial walks through the recommended streaming pattern using the iterator
 
 ```go
 ctx := context.Background()
-client, err := grok.NewClient(ctx)
+client, err := xai.NewClient(ctx)
 if err != nil {
     log.Fatal(err)
 }
@@ -17,7 +17,7 @@ defer client.Close()
 
 ```go
 req := &xaiapiv1.GetCompletionsRequest{
-    Model:    "grok-2-latest",
+    Model:    "grok-4.3",
     Messages: []*xaiapiv1.Message{messages.UserText("Stream a limerick about gRPC.")},
 }
 stream, err := client.Responses.CreateStream(ctx, req)

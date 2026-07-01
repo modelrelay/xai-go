@@ -40,7 +40,7 @@ for _, match := range searchResp.GetMatches() {
 
 ```go
 tokResp, err := client.Tokenize.TokenizeText(ctx, &xaiapiv1.TokenizeTextRequest{
-    Model: "grok-2-latest",
+    Model: "grok-4.3",
     Text:  "Hello world",
 })
 if err != nil { log.Fatal(err) }

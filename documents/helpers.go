@@ -97,7 +97,8 @@ func ToolResponseMessage(toolCallID string, matches []*xaiapiv1.SearchMatch, lim
 		return nil, err
 	}
 	return &xaiapiv1.Message{
-		Role: xaiapiv1.MessageRole_ROLE_TOOL,
+		Role:       xaiapiv1.MessageRole_ROLE_TOOL,
+		ToolCallId: &toolCallID,
 		Content: []*xaiapiv1.Content{
 			{Content: &xaiapiv1.Content_Text{Text: payload}},
 		},
