@@ -76,12 +76,16 @@ for _, delta := range chunk.GetOutputs() {
 }
 full := acc.Response()
 fmt.Println("\n\nFinal answer:", full.GetOutputs()[0].GetMessage().GetContent())
+```
 
-// Or use the high-level iterator helper:
-if err := stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) error {
+Prefer a callback? Drain a fresh stream with the high-level helper instead of the manual `Recv` loop:
+
+```go
+err = stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) error {
 	fmt.Printf("\nChunk %s", chunk.GetId())
 	return nil
-}); err != nil && err != io.EOF {
+})
+if err != nil && err != io.EOF {
 	log.Fatal(err)
 }
 ```
@@ -230,8 +234,8 @@ _ = msg // append ROLE_TOOL message into your conversation
 
 - `XAI_API_KEY` – required unless `xai.WithAPIKey` is provided.
 - `XAI_GRPC_ADDRESS` – optional override for the gRPC endpoint.
-- `XAI_DEFAULT_USER` – optional default user identifier for requests.
-- `XAI_USER_AGENT` – override the default user agent when needed.
+
+(Default user and user-agent are set in code via `xai.WithDefaultUser` / `xai.WithUserAgent`.)
 
 ### Make Targets
 
