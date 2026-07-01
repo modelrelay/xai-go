@@ -19,4 +19,4 @@ if err != nil {
 defer client.Close()
 ```
 
-You can still override individual options by passing additional `grok.Option` values to `NewClient`.
+You can still override individual options by passing additional `xai.Option` values to `NewClient`.
