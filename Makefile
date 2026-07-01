@@ -1,4 +1,4 @@
-BUF ?= go run github.com/bufbuild/buf/cmd/buf@v1.33.0
+BUF ?= go run github.com/bufbuild/buf/cmd/buf@v1.71.0
 PROTO_SRC ?= third_party/xai-proto
 # Public scope only: generate the xAI inference API (xai/api), not xAI's
 # internal management_api / shared (billing, analytics) surfaces.
