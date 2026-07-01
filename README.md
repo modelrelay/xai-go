@@ -32,7 +32,7 @@ if err != nil {
 defer client.Close()
 
 resp, err := client.Chat.GetCompletion(ctx, &xaiapiv1.GetCompletionsRequest{
-	Model: "grok-2-latest",
+	Model: "grok-4.3",
 	Messages: []*xaiapiv1.Message{
 		{Role: xaiapiv1.MessageRole_ROLE_USER, Content: []*xaiapiv1.Content{
 			{Content: &xaiapiv1.Content_Text{Text: "Hello Grok!"}},
@@ -49,7 +49,7 @@ fmt.Println(resp.GetOutputs()[0].GetMessage().GetContent())
 
 ```go
 stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
-	Model: "grok-2-latest",
+	Model: "grok-4.3",
 	Messages: []*xaiapiv1.Message{
 		{Role: xaiapiv1.MessageRole_ROLE_USER, Content: []*xaiapiv1.Content{
 			{Content: &xaiapiv1.Content_Text{Text: "Stream something fancy."}},
@@ -157,7 +157,7 @@ params, _ := search.Parameters(
 	search.WithSources(webSource),
 )
 req := &xaiapiv1.GetCompletionsRequest{
-	Model:           "grok-2-latest",
+	Model:           "grok-4.3",
 	Messages:        []*xaiapiv1.Message{messages.UserText("What's up in Example City?")},
 	Tools:           []*xaiapiv1.Tool{fnTool},
 	SearchParameters: params,
