@@ -11,7 +11,10 @@
 
 ```go
 kac := keepalive.ClientParameters{Time: 30 * time.Second, Timeout: 10 * time.Second}
-client, _ := xai.NewClient(ctx, xai.WithDialOptions(grpc.WithKeepaliveParams(kac)))
+client, err := xai.NewClient(ctx, xai.WithDialOptions(grpc.WithKeepaliveParams(kac)))
+if err != nil {
+    log.Fatal(err)
+}
 ```
 
 ## Reuse Accumulators

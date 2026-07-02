@@ -43,11 +43,13 @@ func TestStreamingIntegration(t *testing.T) {
 		if errors.Is(err, context.Canceled) {
 			t.Fatalf("context canceled")
 		}
-		if errors.Is(err, io.EOF) || !ok {
-			break
-		}
-		if err != nil {
+		// Surface real errors before ending on !ok: Next returns ok=false for
+		// both a clean EOF and a mid-stream gRPC error.
+		if err != nil && !errors.Is(err, io.EOF) {
 			t.Fatalf("stream err: %v", err)
+		}
+		if !ok {
+			break
 		}
 		if firstChunk == 0 {
 			firstChunk = time.Since(start)

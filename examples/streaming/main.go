@@ -28,7 +28,7 @@ func main() {
 
 	stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
 		Model:    "grok-4.3",
-		Messages: []*xaiapiv1.Message{messages.UserText("Stream a haiku about databases.")},
+		Messages: []*xaiapiv1.Message{messages.UserText("Write an eight-line poem about streaming data.")},
 	})
 	if err != nil {
 		log.Fatalf("start stream: %v", err)
@@ -37,7 +37,12 @@ func main() {
 	// Drain the stream, printing tokens as they arrive and accumulating the full
 	// response. Recv returns io.EOF at the end; any other error is a real gRPC
 	// status and must not be swallowed.
+	//
+	// Because chunks are typed, reasoning deltas and answer deltas are separate
+	// fields — no parsing needed to tell them apart. Reasoning models like
+	// grok-4.3 stream their thinking first; render it dimmed, then the answer.
 	acc := responses.NewAccumulator()
+	inReasoning := false
 	for {
 		chunk, err := stream.Recv()
 		if errors.Is(err, io.EOF) {
@@ -48,13 +53,31 @@ func main() {
 		}
 		acc.AddChunk(chunk)
 		for _, out := range chunk.GetOutputs() {
-			fmt.Print(out.GetDelta().GetContent())
+			delta := out.GetDelta()
+			if r := delta.GetReasoningContent(); r != "" {
+				if !inReasoning {
+					fmt.Print("\x1b[2m") // dim the reasoning trace
+					inReasoning = true
+				}
+				fmt.Print(r)
+			}
+			if c := delta.GetContent(); c != "" {
+				if inReasoning {
+					fmt.Print("\x1b[0m\n\n") // reset before the answer
+					inReasoning = false
+				}
+				fmt.Print(c)
+			}
 		}
 	}
+	if inReasoning {
+		fmt.Print("\x1b[0m")
+	}
 
-	outs := acc.Response().GetOutputs()
-	if len(outs) == 0 {
+	final := acc.Response()
+	if len(final.GetOutputs()) == 0 {
 		log.Fatal("stream completed without producing any output")
 	}
-	fmt.Printf("\n\nFinal answer: %s\n", outs[0].GetMessage().GetContent())
+	fmt.Printf("\n\n✓ done — %d completion tokens, model %s\n",
+		final.GetUsage().GetCompletionTokens(), final.GetModel())
 }

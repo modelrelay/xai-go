@@ -26,6 +26,10 @@ client, err := xai.NewClient(ctx,
     xai.WithAPIKey(os.Getenv("XAI_API_KEY")),
     xai.WithDialOptions(recorder.DialOptions()...),
 )
+if err != nil {
+    // handle
+}
+defer client.Close()
 ```
 
 To replay, load the same file in `ModeReplay`:
@@ -41,4 +45,8 @@ client, err := xai.NewClient(ctx,
     xai.WithAPIKey("replay"),
     xai.WithDialOptions(replayer.DialOptions()...),
 )
+if err != nil {
+    // handle
+}
+defer client.Close()
 ```
