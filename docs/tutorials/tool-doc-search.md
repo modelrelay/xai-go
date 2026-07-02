@@ -17,7 +17,7 @@ This short walkthrough shows how to let Grok call a custom `lookup_docs` tool, r
 2. **Kick off a streaming request** with the tool attached:
 
    ```go
-   stream, _ := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
+   stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
        Model: "grok-4.3",
        Messages: []*xaiapiv1.Message{
            messages.SystemText("Use lookup_docs when you need internal knowledge."),
@@ -25,6 +25,9 @@ This short walkthrough shows how to let Grok call a custom `lookup_docs` tool, r
        },
        Tools: []*xaiapiv1.Tool{fnTool},
    })
+   if err != nil {
+       log.Fatal(err)
+   }
    tracker := responses.NewToolCallTracker()
    registry := toolruntime.NewRegistry()
    ```
@@ -66,8 +69,11 @@ This short walkthrough shows how to let Grok call a custom `lookup_docs` tool, r
 5. **When streaming finishes**, inspect the accumulator for the final reply:
 
    ```go
-   final := acc.Response()
-   fmt.Println(final.GetOutputs()[0].GetMessage().GetContent())
+   outs := acc.Response().GetOutputs()
+   if len(outs) == 0 {
+       log.Fatal("stream produced no output")
+   }
+   fmt.Println(outs[0].GetMessage().GetContent())
    ```
 
 The full runnable version of this example lives in `examples/tool_call`. Adjust the collection IDs and tool logic to fit your corpus.

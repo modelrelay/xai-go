@@ -42,6 +42,9 @@ resp, err := client.Chat.GetCompletion(ctx, &xaiapiv1.GetCompletionsRequest{
 if err != nil {
 	log.Fatal(err)
 }
+if len(resp.GetOutputs()) == 0 {
+	log.Fatal("no outputs returned")
+}
 fmt.Println(resp.GetOutputs()[0].GetMessage().GetContent())
 ```
 
@@ -84,7 +87,7 @@ fmt.Println("\n\nFinal answer:", outs[0].GetMessage().GetContent())
 Prefer a callback? Create a stream and drain it with the high-level helper instead of the manual `Recv` loop (a stream can only be consumed once):
 
 ```go
-stream, err := client.Responses.CreateStream(ctx, req)
+stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{/* same request as above */})
 if err != nil {
 	log.Fatal(err)
 }
@@ -125,10 +128,16 @@ from Go, with fewer parsing edge cases.
 ### Deferred Responses
 
 ```go
-deferred, _ := client.Responses.StartDeferred(ctx, &xaiapiv1.GetCompletionsRequest{/* ... */})
+deferred, err := client.Responses.StartDeferred(ctx, &xaiapiv1.GetCompletionsRequest{/* ... */})
+if err != nil {
+	log.Fatal(err)
+}
 resp, err := client.Responses.PollDeferredCompletion(ctx, deferred.GetRequestId(), 0)
 if err != nil {
 	log.Fatal(err)
+}
+if len(resp.GetOutputs()) == 0 {
+	log.Fatal("no outputs returned")
 }
 fmt.Println(resp.GetOutputs()[0].GetMessage().GetContent())
 ```
@@ -151,11 +160,17 @@ Chat requests now include `MaxTurns` to bound agentic tool-calling loops server-
 
 ```go
 tracker := responses.NewToolCallTracker()
-stream, _ := client.Responses.CreateStream(ctx, req)
+stream, err := client.Responses.CreateStream(ctx, req)
+if err != nil {
+	log.Fatal(err)
+}
 for {
 	chunk, err := stream.Recv()
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		break
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 	for _, event := range tracker.ConsumeChunk(chunk) {
 		if event.ArgumentsDelta != "" {
@@ -199,8 +214,14 @@ req := &xaiapiv1.GetCompletionsRequest{
 	SearchParameters: params,
 }
 
-matches, _ := client.Documents.Search(ctx, documents.SearchRequest("Example City history", documents.CollectionSource("city-archive")))
-toolMsg, _ := documents.ToolResponseMessage("call_weather_docs", matches.GetMatches(), 3)
+matches, err := client.Documents.Search(ctx, documents.SearchRequest("Example City history", documents.CollectionSource("city-archive")))
+if err != nil {
+	log.Fatal(err)
+}
+toolMsg, err := documents.ToolResponseMessage("call_weather_docs", matches.GetMatches(), 3)
+if err != nil {
+	log.Fatal(err)
+}
 _ = toolMsg // send as ROLE_TOOL message when replying to the model.
 
 registry := toolruntime.NewRegistry()

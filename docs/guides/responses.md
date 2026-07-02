@@ -10,7 +10,10 @@ This guide covers the full lifecycle of Grok responses: unary completions, strea
 ## Streaming Pattern
 
 ```go
-stream, _ := client.Responses.CreateStream(ctx, req)
+stream, err := client.Responses.CreateStream(ctx, req)
+if err != nil {
+    log.Fatal(err)
+}
 acc := responses.NewAccumulator()
 tracker := responses.NewToolCallTracker()
 registry := toolruntime.NewRegistry()
@@ -41,8 +44,11 @@ if err := stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) 
     log.Fatal(err)
 }
 
-final := acc.Response()
-fmt.Println(final.GetOutputs()[0].GetMessage().GetContent())
+outs := acc.Response().GetOutputs()
+if len(outs) == 0 {
+    log.Fatal("stream produced no output")
+}
+fmt.Println(outs[0].GetMessage().GetContent())
 ```
 
 ## Encrypted Content
@@ -67,9 +73,17 @@ Apply `DecryptResponse` to unary completions.
 req := &xaiapiv1.GetCompletionsRequest{StoreMessages: true}
 responses.RequireStoredRequests(req, previousResponseID)
 
-resp, _ := client.Responses.Create(ctx, req)
-stored, _ := client.Responses.Retrieve(ctx, resp.GetId())
-client.Responses.Delete(ctx, resp.GetId())
+resp, err := client.Responses.Create(ctx, req)
+if err != nil {
+    log.Fatal(err)
+}
+stored, err := client.Responses.Retrieve(ctx, resp.GetId())
+if err != nil {
+    log.Fatal(err)
+}
+if err := client.Responses.Delete(ctx, resp.GetId()); err != nil {
+    log.Fatal(err)
+}
 ```
 
 Use `RetrieveAndDelete` to fetch and clean up in one call.
@@ -77,7 +91,10 @@ Use `RetrieveAndDelete` to fetch and clean up in one call.
 ## Deferred Completions
 
 ```go
-def, _ := client.Responses.StartDeferred(ctx, req)
+def, err := client.Responses.StartDeferred(ctx, req)
+if err != nil {
+    log.Fatal(err)
+}
 full, err := client.Responses.PollDeferredCompletion(ctx, def.GetRequestId(), 0)
 if err != nil {
     log.Fatal(err)

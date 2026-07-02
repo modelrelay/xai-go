@@ -55,11 +55,17 @@ fmt.Println("\nFinal:", outs[0].GetMessage().GetContent())
 
 ## 4. Optional: Use `ForEachChunk`
 
+A stream can only be consumed once, so create a fresh one for the callback helper:
+
 ```go
+stream, err := client.Responses.CreateStream(ctx, req)
+if err != nil {
+    log.Fatal(err)
+}
 if err := stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) error {
     fmt.Printf("chunk %s\n", chunk.GetId())
     return nil
-}); err != nil {
+}); err != nil && !errors.Is(err, io.EOF) {
     log.Fatal(err)
 }
 ```

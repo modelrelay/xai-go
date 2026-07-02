@@ -22,7 +22,10 @@ registry.Register("lookup_docs", func(ctx context.Context, fn *xaiapiv1.Function
     return matches.GetMatches(), nil
 })
 
-stream, _ := client.Responses.CreateStream(ctx, reqWithTools)
+stream, err := client.Responses.CreateStream(ctx, reqWithTools)
+if err != nil {
+    log.Fatal(err)
+}
 acc := responses.NewAccumulator()
 
 if err := stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) error {
