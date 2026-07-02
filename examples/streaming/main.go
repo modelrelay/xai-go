@@ -78,6 +78,6 @@ func main() {
 	if len(final.GetOutputs()) == 0 {
 		log.Fatal("stream completed without producing any output")
 	}
-	fmt.Printf("\n\n✓ done — %d completion tokens; accumulator rebuilt the full typed response (model %s)\n",
+	fmt.Printf("\n\n✓ done — %d completion tokens, model %s\n",
 		final.GetUsage().GetCompletionTokens(), final.GetModel())
 }
