@@ -63,7 +63,7 @@ if err != nil {
 acc := responses.NewAccumulator()
 for {
 	chunk, err := stream.Recv()
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		break
 	}
 	if err != nil {
@@ -74,9 +74,11 @@ for {
 		fmt.Print(out.GetDelta().GetContent())
 	}
 }
-if outs := acc.Response().GetOutputs(); len(outs) > 0 {
-	fmt.Println("\n\nFinal answer:", outs[0].GetMessage().GetContent())
+outs := acc.Response().GetOutputs()
+if len(outs) == 0 {
+	log.Fatal("stream produced no output")
 }
+fmt.Println("\n\nFinal answer:", outs[0].GetMessage().GetContent())
 ```
 
 Prefer a callback? Drain a fresh stream with the high-level helper instead of the manual `Recv` loop:
@@ -221,7 +223,7 @@ _ = msg // append ROLE_TOOL message into your conversation
 
 ### Examples & Integration Tests
 
-- `examples/streaming` demonstrates a streaming chat session using the iterator helper. Run with `go run ./examples/streaming` after setting `XAI_API_KEY`.
+- `examples/streaming` demonstrates a streaming chat session, draining the stream with `stream.Recv`. Run with `go run ./examples/streaming` after setting `XAI_API_KEY`.
 - `examples/tool_call` shows how to react to tool-call events, issue document searches, and feed ROLE_TOOL messages back into the conversation.
 - Integration tests live under `integration/` and are guarded by the `integration` build tag. Run them with `XAI_API_KEY=... go test -tags=integration ./integration/...`.
 - Tutorials:
