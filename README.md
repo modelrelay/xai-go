@@ -70,12 +70,13 @@ for {
 		log.Fatal(err)
 	}
 	acc.AddChunk(chunk)
-for _, delta := range chunk.GetOutputs() {
-	fmt.Print(delta.GetDelta().GetContent())
+	for _, out := range chunk.GetOutputs() {
+		fmt.Print(out.GetDelta().GetContent())
+	}
 }
+if outs := acc.Response().GetOutputs(); len(outs) > 0 {
+	fmt.Println("\n\nFinal answer:", outs[0].GetMessage().GetContent())
 }
-full := acc.Response()
-fmt.Println("\n\nFinal answer:", full.GetOutputs()[0].GetMessage().GetContent())
 ```
 
 Prefer a callback? Drain a fresh stream with the high-level helper instead of the manual `Recv` loop:

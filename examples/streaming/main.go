@@ -25,19 +25,22 @@ func main() {
 		log.Fatalf("create client: %v", err)
 	}
 	defer client.Close()
-	req := &xaiapiv1.GetCompletionsRequest{
+
+	stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
 		Model:    "grok-4.3",
 		Messages: []*xaiapiv1.Message{messages.UserText("Stream a haiku about databases.")},
-	}
-	stream, err := client.Responses.CreateStream(ctx, req)
+	})
 	if err != nil {
 		log.Fatalf("start stream: %v", err)
 	}
+
+	// Drain the stream, printing tokens as they arrive and accumulating the full
+	// response. Recv returns io.EOF at the end; any other error is a real gRPC
+	// status and must not be swallowed.
 	acc := responses.NewAccumulator()
-	it := stream.Iterator(ctx)
 	for {
-		chunk, ok, err := it.Next()
-		if errors.Is(err, io.EOF) || !ok {
+		chunk, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -48,6 +51,10 @@ func main() {
 			fmt.Print(out.GetDelta().GetContent())
 		}
 	}
-	full := acc.Response()
-	fmt.Printf("\n\nFinal answer: %s\n", full.GetOutputs()[0].GetMessage().GetContent())
+
+	outs := acc.Response().GetOutputs()
+	if len(outs) == 0 {
+		log.Fatal("stream completed without producing any output")
+	}
+	fmt.Printf("\n\nFinal answer: %s\n", outs[0].GetMessage().GetContent())
 }
