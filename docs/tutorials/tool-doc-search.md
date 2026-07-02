@@ -5,13 +5,16 @@ This short walkthrough shows how to let Grok call a custom `lookup_docs` tool, r
 1. **Prepare a tool definition** using the helpers in `tools`:
 
    ```go
-   fnTool, _ := tools.FunctionTool("lookup_docs", "Look up documents", map[string]any{
+   fnTool, err := tools.FunctionTool("lookup_docs", "Look up documents", map[string]any{
        "type": "object",
        "properties": map[string]any{
            "query": map[string]any{"type": "string"},
        },
        "required": []string{"query"},
    })
+   if err != nil {
+       log.Fatal(err)
+   }
    ```
 
 2. **Kick off a streaming request** with the tool attached:
@@ -58,7 +61,7 @@ This short walkthrough shows how to let Grok call a custom `lookup_docs` tool, r
            if err != nil {
                return err
            }
-           // Append msg to your conversation state before resuming the loop.
+           _ = msg // Append msg to your conversation state before resuming the loop.
        }
        return nil
    }); err != nil {

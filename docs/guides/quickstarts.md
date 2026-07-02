@@ -8,7 +8,11 @@ resp, err := client.Embeddings.Embed(ctx, &xaiapiv1.EmbedRequest{
     Input: []*xaiapiv1.EmbedInput{{Input: &xaiapiv1.EmbedInput_String{String_: "hello"}}},
 })
 if err != nil { log.Fatal(err) }
-fmt.Println(resp.GetEmbeddings()[0].GetEmbeddings()[0].GetFloatArray())
+embs := resp.GetEmbeddings()
+if len(embs) == 0 || len(embs[0].GetEmbeddings()) == 0 {
+    log.Fatal("no embeddings returned")
+}
+fmt.Println(embs[0].GetEmbeddings()[0].GetFloatArray())
 ```
 
 ## Images
@@ -19,6 +23,9 @@ imgResp, err := client.Images.GenerateImage(ctx, &xaiapiv1.GenerateImageRequest{
     Prompt: "A rocket made of code",
 })
 if err != nil { log.Fatal(err) }
+if len(imgResp.GetImages()) == 0 {
+    log.Fatal("no images returned")
+}
 fmt.Println(imgResp.GetImages()[0].GetUrl())
 ```
 

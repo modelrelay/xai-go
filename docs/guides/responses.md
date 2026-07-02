@@ -81,6 +81,7 @@ stored, err := client.Responses.Retrieve(ctx, resp.GetId())
 if err != nil {
     log.Fatal(err)
 }
+fmt.Println("stored response:", stored.GetId())
 if err := client.Responses.Delete(ctx, resp.GetId()); err != nil {
     log.Fatal(err)
 }
@@ -99,6 +100,10 @@ full, err := client.Responses.PollDeferredCompletion(ctx, def.GetRequestId(), 0)
 if err != nil {
     log.Fatal(err)
 }
+if len(full.GetOutputs()) == 0 {
+    log.Fatal("no outputs returned")
+}
+fmt.Println(full.GetOutputs()[0].GetMessage().GetContent())
 ```
 
 ## Putting It Together

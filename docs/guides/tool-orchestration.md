@@ -38,7 +38,7 @@ if err := stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) 
         if err != nil {
             return err
         }
-        // Append msg to your conversation history and continue streaming
+        _ = msg // Append msg to your conversation history and continue streaming
     }
     return nil
 }); err != nil {

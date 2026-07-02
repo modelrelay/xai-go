@@ -196,17 +196,26 @@ for {
 - `config.Config` offers a declarative data map for client instantiation (e.g., load from YAML/JSON and pass to `Config.NewClient`).
 
 ```go
-fnTool, _ := tools.FunctionTool("lookup_weather", "Fetch weather", map[string]any{
+fnTool, err := tools.FunctionTool("lookup_weather", "Fetch weather", map[string]any{
 	"type": "object",
 	"properties": map[string]any{
 		"city": map[string]any{"type": "string"},
 	},
 })
-webSource, _ := search.WebSource(search.WebAllow("example.com"))
-params, _ := search.Parameters(
+if err != nil {
+	log.Fatal(err)
+}
+webSource, err := search.WebSource(search.WebAllow("example.com"))
+if err != nil {
+	log.Fatal(err)
+}
+params, err := search.Parameters(
 	search.WithMode(xaiapiv1.SearchMode_ON_SEARCH_MODE),
 	search.WithSources(webSource),
 )
+if err != nil {
+	log.Fatal(err)
+}
 req := &xaiapiv1.GetCompletionsRequest{
 	Model:           "grok-4.3",
 	Messages:        []*xaiapiv1.Message{messages.UserText("What's up in Example City?")},
@@ -228,13 +237,16 @@ registry := toolruntime.NewRegistry()
 registry.Register("lookup_weather", func(ctx context.Context, fn *xaiapiv1.FunctionCall) (any, error) {
 	return map[string]any{"echo": fn.GetArguments()}, nil
 })
-msg, _ := registry.Handle(ctx, responses.ToolCallEvent{
+msg, err := registry.Handle(ctx, responses.ToolCallEvent{
 	CallID:   "call_weather_docs",
 	Complete: true,
 	Call: &xaiapiv1.ToolCall{
 		Tool: &xaiapiv1.ToolCall_Function{Function: &xaiapiv1.FunctionCall{Name: "lookup_weather", Arguments: "{\"city\":\"Example\"}"}}},
 	},
 })
+if err != nil {
+	log.Fatal(err)
+}
 _ = msg // append ROLE_TOOL message into your conversation
 ```
 
