@@ -9,13 +9,15 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/modelrelay/xai-go/internal/version"
 )
 
 const (
 	// DefaultAddress is the public Grok/xAI gRPC endpoint.
 	DefaultAddress = "api.x.ai:443"
 
-	defaultUserAgent = "xai-go/0.1.1"
+	defaultUserAgent = "xai-go/" + version.Version
 )
 
 // Config holds dial parameters shared across all services.

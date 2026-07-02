@@ -18,6 +18,7 @@ import (
 	"github.com/modelrelay/xai-go/images"
 	"github.com/modelrelay/xai-go/internal/raw"
 	"github.com/modelrelay/xai-go/internal/transport"
+	"github.com/modelrelay/xai-go/internal/version"
 	"github.com/modelrelay/xai-go/models"
 	"github.com/modelrelay/xai-go/responses"
 	"github.com/modelrelay/xai-go/sample"
@@ -27,7 +28,9 @@ import (
 
 const (
 	// Version identifies the current SDK revision reported via User-Agent.
-	Version = "0.1.1"
+	// The value lives in internal/version so the transport's default
+	// User-Agent stays in lockstep.
+	Version = version.Version
 
 	envAPIKey  = "XAI_API_KEY"
 	envAddress = "XAI_GRPC_ADDRESS"

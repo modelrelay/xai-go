@@ -81,14 +81,18 @@ if len(outs) == 0 {
 fmt.Println("\n\nFinal answer:", outs[0].GetMessage().GetContent())
 ```
 
-Prefer a callback? Drain a fresh stream with the high-level helper instead of the manual `Recv` loop:
+Prefer a callback? Create a stream and drain it with the high-level helper instead of the manual `Recv` loop (a stream can only be consumed once):
 
 ```go
+stream, err := client.Responses.CreateStream(ctx, req)
+if err != nil {
+	log.Fatal(err)
+}
 err = stream.ForEachChunk(ctx, func(chunk *xaiapiv1.GetChatCompletionChunk) error {
 	fmt.Printf("\nChunk %s", chunk.GetId())
 	return nil
 })
-if err != nil && err != io.EOF {
+if err != nil && !errors.Is(err, io.EOF) {
 	log.Fatal(err)
 }
 ```

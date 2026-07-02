@@ -62,11 +62,13 @@ func main() {
 	it := stream.Iterator(ctx)
 	for {
 		chunk, ok, err := it.Next()
-		if errors.Is(err, io.EOF) || !ok {
-			break
-		}
-		if err != nil {
+		// Surface real errors before ending on !ok: Next returns ok=false for
+		// both a clean EOF and a mid-stream gRPC error.
+		if err != nil && !errors.Is(err, io.EOF) {
 			log.Fatalf("stream err: %v", err)
+		}
+		if !ok {
+			break
 		}
 		acc.AddChunk(chunk)
 		for _, event := range tracker.ConsumeChunk(chunk) {
@@ -79,6 +81,9 @@ func main() {
 			}
 		}
 	}
-	full := acc.Response()
-	fmt.Println("\nFinal answer:", full.GetOutputs()[0].GetMessage().GetContent())
+	outs := acc.Response().GetOutputs()
+	if len(outs) == 0 {
+		log.Fatal("stream produced no output")
+	}
+	fmt.Println("\nFinal answer:", outs[0].GetMessage().GetContent())
 }

@@ -46,9 +46,11 @@ for {
         fmt.Print(out.GetDelta().GetContent())
     }
 }
-if outs := acc.Response().GetOutputs(); len(outs) > 0 {
-    fmt.Println("\nFinal:", outs[0].GetMessage().GetContent())
+outs := acc.Response().GetOutputs()
+if len(outs) == 0 {
+    log.Fatal("stream produced no output")
 }
+fmt.Println("\nFinal:", outs[0].GetMessage().GetContent())
 ```
 
 ## 4. Optional: Use `ForEachChunk`

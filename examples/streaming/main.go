@@ -28,7 +28,7 @@ func main() {
 
 	stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
 		Model:    "grok-4.3",
-		Messages: []*xaiapiv1.Message{messages.UserText("Stream a haiku about databases.")},
+		Messages: []*xaiapiv1.Message{messages.UserText("Write an eight-line poem about streaming data.")},
 	})
 	if err != nil {
 		log.Fatalf("start stream: %v", err)
