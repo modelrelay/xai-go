@@ -33,18 +33,22 @@ acc := responses.NewAccumulator()
 it := stream.Iterator(ctx)
 for {
     chunk, ok, err := it.Next()
-    if errors.Is(err, io.EOF) || !ok {
-        break
-    }
-    if err != nil {
+    // Surface a real error before ending on !ok: Next returns ok=false for
+    // both a clean EOF and a mid-stream gRPC error.
+    if err != nil && !errors.Is(err, io.EOF) {
         log.Fatal(err)
+    }
+    if !ok {
+        break
     }
     acc.AddChunk(chunk)
     for _, out := range chunk.GetOutputs() {
         fmt.Print(out.GetDelta().GetContent())
     }
 }
-fmt.Println("\nFinal:", acc.Response().GetOutputs()[0].GetMessage().GetContent())
+if outs := acc.Response().GetOutputs(); len(outs) > 0 {
+    fmt.Println("\nFinal:", outs[0].GetMessage().GetContent())
+}
 ```
 
 ## 4. Optional: Use `ForEachChunk`

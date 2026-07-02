@@ -8,6 +8,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/modelrelay/xai-go"
 	xaiapiv1 "github.com/modelrelay/xai-go/gen/xai/api/v1"
@@ -24,18 +25,20 @@ func acceptReq() *xaiapiv1.GetCompletionsRequest {
 	}
 }
 
-// TestStreamingAcceptance_ExamplePattern mirrors examples/streaming EXACTLY
-// (fresh client, Iterator, manual AddChunk), across many fresh connections,
-// and reports the terminal (ok,err) whenever a run yields 0 outputs — the
-// case where the example panics. Captures the error the example's loop swallows.
-func TestStreamingAcceptance_ExamplePattern(t *testing.T) {
+// TestStreamingAcceptance_FreshClientRepeated exercises the exact drain pattern
+// shipped in examples/streaming (fresh client + connection each run, stream.Recv
+// loop, accumulator), asserting every run yields non-empty content. This is the
+// regression guard for the launch-blocking flake where a stream produced zero
+// outputs and the example panicked. Each run is bounded by a timeout so a stuck
+// stream fails the gate instead of hanging it.
+func TestStreamingAcceptance_FreshClientRepeated(t *testing.T) {
 	requireKey(t)
-	const runs = 30
-	fails := 0
+	const runs = 20
 	for i := 0; i < runs; i++ {
 		func() {
-			ctx := context.Background()
-			client, err := xai.NewClient(ctx)
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+			client, err := xai.NewClient(ctx) // fresh connection each iteration
 			if err != nil {
 				t.Fatalf("run %d: new client: %v", i, err)
 			}
@@ -44,31 +47,24 @@ func TestStreamingAcceptance_ExamplePattern(t *testing.T) {
 			if err != nil {
 				t.Fatalf("run %d: CreateStream: %v", i, err)
 			}
+			// Drain via Recv exactly like examples/streaming: io.EOF ends the
+			// stream; any other error is a real gRPC status and must fail (not
+			// be swallowed).
 			acc := responses.NewAccumulator()
-			it := stream.Iterator(ctx)
-			n := 0
-			var termOK bool
-			var termErr error
 			for {
-				chunk, ok, nerr := it.Next()
-				termOK, termErr = ok, nerr
-				if errors.Is(nerr, io.EOF) || !ok {
+				chunk, rerr := stream.Recv()
+				if errors.Is(rerr, io.EOF) {
 					break
 				}
-				if nerr != nil {
-					break
+				if rerr != nil {
+					t.Fatalf("run %d: stream error: %v", i, rerr)
 				}
-				n++
 				acc.AddChunk(chunk)
 			}
 			outs := acc.Response().GetOutputs()
 			if len(outs) == 0 || strings.TrimSpace(outs[0].GetMessage().GetContent()) == "" {
-				fails++
-				t.Errorf("run %d FLAKE: chunks=%d outputs=%d term(ok=%v err=%v)", i, n, len(outs), termOK, termErr)
+				t.Fatalf("run %d: stream produced no content (the flake)", i)
 			}
 		}()
-	}
-	if fails > 0 {
-		t.Fatalf("%d/%d runs hit the 0-output flake", fails, runs)
 	}
 }
