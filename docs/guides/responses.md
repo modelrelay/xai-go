@@ -71,7 +71,9 @@ Apply `DecryptResponse` to unary completions.
 
 ```go
 req := &xaiapiv1.GetCompletionsRequest{StoreMessages: true}
-responses.RequireStoredRequests(req, previousResponseID)
+if err := responses.RequireStoredRequests(req, previousResponseID); err != nil {
+    log.Fatal(err)
+}
 
 resp, err := client.Responses.Create(ctx, req)
 if err != nil {
