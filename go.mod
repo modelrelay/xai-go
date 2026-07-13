@@ -1,6 +1,6 @@
 module github.com/modelrelay/xai-go
 
-go 1.26.4
+go 1.26.5
 
 require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7

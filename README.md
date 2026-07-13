@@ -86,8 +86,11 @@ fmt.Println("\n\nFinal answer:", outs[0].GetMessage().GetContent())
 ```
 
 For reasoning models, `reasoning_effort` is the primary latency lever. Choose
-`EFFORT_NONE`, `EFFORT_LOW`, `EFFORT_MEDIUM`, or `EFFORT_HIGH` according to the
-workload. If the field is omitted, the server default is `EFFORT_MEDIUM`.
+`EFFORT_LOW`, `EFFORT_MEDIUM`, or `EFFORT_HIGH` according to the workload. The
+enum also includes `EFFORT_NONE` for models that support disabling reasoning,
+but it is not universally accepted: always-reasoning models such as `grok-4.5`
+reject it, making `EFFORT_LOW` their minimal setting. If the field is omitted,
+the server default is `EFFORT_MEDIUM`.
 
 Prefer a callback? Create a stream and drain it with the high-level helper instead of the manual `Recv` loop (a stream can only be consumed once):
 
