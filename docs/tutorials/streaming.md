@@ -17,14 +17,19 @@ defer client.Close()
 
 ```go
 req := &xaiapiv1.GetCompletionsRequest{
-    Model:    "grok-4.3",
-    Messages: []*xaiapiv1.Message{messages.UserText("Stream a limerick about gRPC.")},
+    Model:           "grok-4.3",
+    ReasoningEffort: xaiapiv1.ReasoningEffort_EFFORT_LOW.Enum(),
+    Messages:        []*xaiapiv1.Message{messages.UserText("Stream a limerick about gRPC.")},
 }
 stream, err := client.Responses.CreateStream(ctx, req)
 if err != nil {
     log.Fatal(err)
 }
 ```
+
+For reasoning models, `ReasoningEffort` is the primary latency lever. Set it to
+`EFFORT_NONE`, `EFFORT_LOW`, `EFFORT_MEDIUM`, or `EFFORT_HIGH`; if omitted, the
+server defaults to `EFFORT_MEDIUM`.
 
 ## 3. Iterate over chunks with cancellation support
 
