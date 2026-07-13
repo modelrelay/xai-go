@@ -52,7 +52,8 @@ fmt.Println(resp.GetOutputs()[0].GetMessage().GetContent())
 
 ```go
 stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
-	Model: "grok-4.3",
+	Model:           "grok-4.3",
+	ReasoningEffort: xaiapiv1.ReasoningEffort_EFFORT_LOW.Enum(),
 	Messages: []*xaiapiv1.Message{
 		{Role: xaiapiv1.MessageRole_ROLE_USER, Content: []*xaiapiv1.Content{
 			{Content: &xaiapiv1.Content_Text{Text: "Stream something fancy."}},
@@ -84,6 +85,13 @@ if len(outs) == 0 {
 fmt.Println("\n\nFinal answer:", outs[0].GetMessage().GetContent())
 ```
 
+For reasoning models, `reasoning_effort` is the primary latency lever. Choose
+`EFFORT_LOW`, `EFFORT_MEDIUM`, or `EFFORT_HIGH` according to the workload. The
+enum also includes `EFFORT_NONE` for models that support disabling reasoning,
+but it is not universally accepted: always-reasoning models such as `grok-4.5`
+reject it, making `EFFORT_LOW` their minimal setting. If the field is omitted,
+the server default is `EFFORT_MEDIUM`.
+
 Prefer a callback? Create a stream and drain it with the high-level helper instead of the manual `Recv` loop (a stream can only be consumed once):
 
 ```go
@@ -99,6 +107,32 @@ if err != nil && !errors.Is(err, io.EOF) {
 	log.Fatal(err)
 }
 ```
+
+### Usage semantics
+
+`completion_tokens` counts generated text tokens only. `reasoning_tokens` is a
+separate, disjoint counter: it is not included in `completion_tokens`, but it is
+included in `total_tokens` along with prompt tokens.
+
+A live `grok-4.5` response with a one-token visible answer reported
+`completion_tokens=1` and roughly 1,100 reasoning tokens, with the reasoning
+tokens contributing to `total_tokens` rather than `completion_tokens`.
+
+As a short accounting example, a response with `prompt_tokens=24`,
+`completion_tokens=1`, and `reasoning_tokens=1,100` has 1 visible output token,
+1,101 generated tokens, and `total_tokens=1,125`:
+
+```go
+usage := resp.GetUsage()
+contentTokens := usage.GetCompletionTokens()       // visible text only
+reasoningTokens := usage.GetReasoningTokens()      // disjoint from contentTokens
+generatedTokens := responses.GeneratedTokens(usage) // content + reasoning
+allTokens := usage.GetTotalTokens()                // prompt + content + reasoning
+```
+
+Use `completion_tokens` when measuring visible content, and `total_tokens` when
+accounting for all tokens processed by the request. Do not add
+`reasoning_tokens` to `total_tokens`; it is already included there.
 
 ### Why gRPC for streaming
 
@@ -193,6 +227,7 @@ for {
 - `toolruntime.Registry` converts completed tool events into ROLE_TOOL messages using registered handlers.
 - `encrypted.DecryptResponse/DecryptChunk` help you plug in custom decryptors when `use_encrypted_content` is enabled.
 - `Responses.RetrieveAndDelete` and `RequireStoredRequests` simplify stored-response lifecycles.
+- `responses.GeneratedTokens` adds the disjoint text and reasoning counters without double-counting prompt tokens.
 - `config.Config` offers a declarative data map for client instantiation (e.g., load from YAML/JSON and pass to `Config.NewClient`).
 
 ```go

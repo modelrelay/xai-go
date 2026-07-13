@@ -27,8 +27,13 @@ func main() {
 	defer client.Close()
 
 	stream, err := client.Responses.CreateStream(ctx, &xaiapiv1.GetCompletionsRequest{
-		Model:    "grok-4.3",
-		Messages: []*xaiapiv1.Message{messages.UserText("Write an eight-line poem about streaming data.")},
+		Model: "grok-4.3",
+		// The server defaults to EFFORT_MEDIUM on reasoning models. This is the
+		// primary latency lever. EFFORT_NONE disables reasoning only on models
+		// that support it; always-reasoning models such as grok-4.5 reject it and
+		// use EFFORT_LOW as their minimal setting.
+		ReasoningEffort: xaiapiv1.ReasoningEffort_EFFORT_LOW.Enum(),
+		Messages:        []*xaiapiv1.Message{messages.UserText("Write an eight-line poem about streaming data.")},
 	})
 	if err != nil {
 		log.Fatalf("start stream: %v", err)
